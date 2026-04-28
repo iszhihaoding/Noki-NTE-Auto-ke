@@ -3,6 +3,7 @@ import time
 import logging
 from pathlib import Path
 import sys
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -78,7 +79,6 @@ def get_all_device_ports(adb_path):
         list: Device port/serial numbers in format like ["emulator-5554", "127.0.0.1:16384"]
     """
     try:
-        # Execute adb devices command
         adb_command = f'"{adb_path}" devices'
         output = subprocess.check_output(
             adb_command,
@@ -89,11 +89,9 @@ def get_all_device_ports(adb_path):
 
         device_list = []
         for line in output.splitlines():
-            # Skip empty lines and header
             if line.strip() == "" or "List of devices" in line:
                 continue
 
-            # Parse device information
             parts = line.strip().split('\t')
             if len(parts) >= 2 and parts[1] == 'device':
                 device_list.append(parts[0])
@@ -119,17 +117,24 @@ def connect_emulator(current_dir, i):
     Returns:
         bool: True if connection successful, False otherwise
     """
-    app_path = current_dir / "platform-tools" / "adb.exe"
+    app_path = current_dir / "platform-tools" / "adb"
+
+    if not app_path.exists():
+        app_path = current_dir / "adb"
+
+    if not app_path.exists():
+        which_adb = subprocess.run(['which', 'adb'], capture_output=True, text=True)
+        if which_adb.returncode == 0 and which_adb.stdout.strip():
+            app_path = Path(which_adb.stdout.strip())
 
     base_port = 16384
-    command = [app_path, 'connect', f"127.0.0.1:{base_port + 32 * i}"]
+    command = [str(app_path), 'connect', f"127.0.0.1:{base_port + 32 * i}"]
     result = subprocess.run(command, capture_output=True, text=True, encoding='utf-8')
     if result.stdout is not None and 'connected' in result.stdout:
         logger.debug("成功连接到模拟器")
         return True
     else:
-        # Try alternative port
-        command = [app_path, 'connect', f"127.0.0.1:{base_port + 1 + 32 * i}"]
+        command = [str(app_path), 'connect', f"127.0.0.1:{base_port + 1 + 32 * i}"]
         result = subprocess.run(command, capture_output=True, text=True, encoding='utf-8')
         if result.stdout is not None and 'connected' in result.stdout:
             logger.debug("成功连接到模拟器")
