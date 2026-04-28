@@ -1,0 +1,14 @@
+[project]
+name = "workspace"
+version = "0.1.0"
+description = "Cross-platform automation scripts for emulator control"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "numpy",
+    "opencv-python",
+    "pillow",
+    "pyobjc-framework-Quartz ; sys_platform == 'darwin'",
+    "pyobjc-framework-Cocoa ; sys_platform == 'darwin'",
+    "pywin32 ; sys_platform == 'win32'",
+]
