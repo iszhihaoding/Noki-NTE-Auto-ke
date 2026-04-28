@@ -108,6 +108,23 @@ def get_all_device_ports(adb_path):
         return []
 
 
+import sys
+
+def get_adb_path(current_dir):
+    """
+    Get the appropriate ADB path based on the operating system
+    
+    Args:
+        current_dir: Current working directory path
+        
+    Returns:
+        Path: Path to the ADB executable
+    """
+    if sys.platform == "darwin":
+        return current_dir / "platform-tools" / "adb"
+    else:
+        return current_dir / "platform-tools" / "adb.exe"
+
 def connect_emulator(current_dir, i):
     """
     Connect to emulator and return success status
@@ -119,7 +136,7 @@ def connect_emulator(current_dir, i):
     Returns:
         bool: True if connection successful, False otherwise
     """
-    app_path = current_dir / "platform-tools" / "adb.exe"
+    app_path = get_adb_path(current_dir)
 
     base_port = 16384
     command = [app_path, 'connect', f"127.0.0.1:{base_port + 32 * i}"]
